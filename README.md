@@ -2,6 +2,6 @@
 
 ## Description
 
-Resultados Prueba tecnica Kevin Alexander Garcia 
+Prueba tecnica Kevin Alexander Garcia 
 
 
