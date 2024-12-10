@@ -13,7 +13,17 @@ async function bootstrap() {
     .setTitle('DOCUMENTATION API WEB STORE')
     .setDescription('En este apartado se muestra la documentacion de la api para el consumo de los end points')
     .setVersion('1.0')
-    .addTag('Users')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT', // Opcional, pero recomendado
+      },
+      'JWT-auth', // Nombre del esquema
+    )
+    .addTag('Auth')
+    .addTag('Products')
+    .addTag('Sales')
     .build();
     const documentFactory = () => SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('documentation', app, documentFactory);

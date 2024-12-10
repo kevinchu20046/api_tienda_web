@@ -6,19 +6,19 @@ export type UserDocument = Users & Document;
 export class Users {
 
     @Prop({require:true})
-    name_user: String
+    name_user: string
 
 
     @Prop({require:true,unique:true})
-    email_user: String
+    email_user: string
 
 
     @Prop({require:true})
-    password: String
+    password: string
 
 
-    @Prop({require:true})
-    role_user: String
+    @Prop({require:true, default:'Cliente'})
+    role_user: string
 
     @Prop({ default: Date.now })
     createdAt_user: Date;
