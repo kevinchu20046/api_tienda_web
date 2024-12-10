@@ -10,3 +10,9 @@ Prueba tecnica Kevin Alexander Garcia
 
 Este proyecto fue realizado en nest.js
 
+-- version de node en la que se desarrollo : v22.9.0
+
+
+
+
+
