@@ -50,7 +50,11 @@ export class UsersService {
     // Servicio para encontrar usuario por nombre,correo,id 
     async findUser(filters:{name_user?:string,email_user?:string,_id?:string}){
         try {
-            return await this.usersModel.findOne(filters);
+            const objfil = Object.fromEntries(Object.entries(filters).filter((key , value)=>{
+                if(key[1] && String(key[1].trim() !== '')) return key
+            }))
+            
+            return await this.usersModel.findOne(objfil);
         } catch (error) {
             throw error
         }

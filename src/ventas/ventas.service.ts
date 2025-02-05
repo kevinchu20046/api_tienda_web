@@ -6,8 +6,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Products, ProductsDocument } from 'src/products/schema/products.schema';
 import { RequestWhitUser } from 'src/auth/interface/requestuser.interface';
-import { GetProductsQueryDto } from './dto/getquery-venta-dto';
-import { findSourceMap } from 'module';
+import { GetVentaQueryDto } from './dto/getquery-venta-dto';
 
 
 @Injectable()
@@ -38,6 +37,8 @@ export class VentasService {
           throw new BadRequestException(`La cantidad vendida: ${item.amount_product} supera al monto actual : ${findproduct.amount_product}`)
         } 
         
+        findproduct.amount_product -= item.amount_product
+
         total_venta += findproduct.price_product*item.amount_product 
 
         productos_price.push({
@@ -47,6 +48,9 @@ export class VentasService {
         })
         
         await findproduct.save()
+
+
+
       }
       
       const ventas = {
@@ -73,13 +77,16 @@ export class VentasService {
 
 
   // servicio para traer todas las ventas realizadas
-  async findAllVentasService(query:GetProductsQueryDto) {
+  async findAllVentasService(query:GetVentaQueryDto) {
     try {
       const findquery = {}
 
+
+      if(Array.isArray(query.category_product)) findquery["products_sale.category_product"] = {$in:query.category_product}
+
       if(query.category_product) findquery["products_sale.category_product"] = query.category_product
 
-      if(query.total_sale) findquery["total_sale"] = parseInt(query.total_sale)
+      if(query.total_sale) findquery["total_sale"] = query.total_sale
 
       const sales = await this.ventasModel.find(findquery)
       if(sales.length === 0) return[{message:'No se encontraron ventas'}]

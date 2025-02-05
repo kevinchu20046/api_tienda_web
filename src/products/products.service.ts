@@ -47,9 +47,10 @@ export class ProductsService {
 
 
   // Servicio para listar todos los productos
-  async findAllProductService() {
+  async findProductService(filters:{ [key: string]: string }) {
     try {
-      const products = await this.productsModel.find()
+    
+      const products = await this.productsModel.find(filters,{is_delete:false})
       if(products.length === 0) return[{message:'No hay productos registrados'}]
 
       if(!products) throw new InternalServerErrorException('error en la peticion')
@@ -60,17 +61,6 @@ export class ProductsService {
     }
   }
 
-  //  Servicio para encontrar un producto por nombre
-  async findNameProductService(name:string){
-    try {
-      const findproduct = await this.productsModel.findOne({name_product:name});
-      if(!findproduct) return [{message:`No hay ningun producto registrado con este nombre: ${name}`}]
-
-      return [findproduct]
-    } catch (error) {
-        throw error
-    }
-  }
 
   // Servicio para actualizar un producto
   async updateProductService(id:string, updateProductDto: UpdateProductDto) {
@@ -96,12 +86,20 @@ export class ProductsService {
 
 
   // Servicio para borrar un servicio
-  async deleteProductService(id:string) {
+  async deleteProductService(id:string, request:RequestWhitUser) {
     try {
-      const deleteproduct = await this.productsModel.deleteOne({_id:id})
+      const {} = request.user
 
-      if(deleteproduct.deletedCount===0) throw new InternalServerErrorException('Error en la peticion')
-      if(deleteproduct.deletedCount > 0) return [{message:'Producto eliminado correctamente'}]
+      const deleteproduct = await this.productsModel.findByIdAndUpdate(id,{
+        is_delete: true,
+        delete_at: Date.now(),
+        delete_by: request.user.sub
+      })
+      
+      if(!deleteproduct) throw new InternalServerErrorException('Error en la peticion')
+
+
+      return [{message:'producto eliminado correctamente'}]  
     } catch (error) {
       throw error
     }

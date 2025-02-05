@@ -5,13 +5,22 @@ import { AuthLogin } from './dto/auth-login.dto';
 import { Argon2Service } from 'src/argon2/argon2.service';
 import { JwtService } from '@nestjs/jwt';
 
+// importacion del servicio de cache
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+
+
+
+
+
 @Injectable()
 export class AuthService {
 
     constructor(
         @Inject(UsersService) private readonly usersService: UsersService,
         @Inject(Argon2Service) private readonly argon2Service: Argon2Service,
-        @Inject(JwtService) private readonly jwtService: JwtService
+        @Inject(JwtService) private readonly jwtService: JwtService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ){}
 
     // Servicio para la creacion de clientes
@@ -30,12 +39,23 @@ export class AuthService {
             const { email, password } = authLogin
             const finduser = await this.usersService.findUser({email_user:email})
 
-            if(!finduser) throw new UnauthorizedException('Usuario o contraseña incorrecta')
+            if(!finduser) {
+                const loginattemp = (await this.cacheManager.get<number>(`login_attemp_${email}`)) || 0 ;
+                
+
+                await this.cacheManager.set(`login_attemp_${email}`, loginattemp + 1 , 300000)
+                
+
+                throw new UnauthorizedException('Usuario o contraseña incorrecta')
+            
+            }
 
             const checkpassword = await this.argon2Service.verificarPassword(finduser.password,password)
 
             if(!checkpassword) throw new UnauthorizedException('Usuario o contraseña incorrecta')
     
+            
+
             const token =  await this.jwtService.signAsync({sub:finduser._id, role:finduser.role_user})
             
             return [{

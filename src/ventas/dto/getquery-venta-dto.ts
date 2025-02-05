@@ -1,15 +1,30 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsOptional, IsString } from "class-validator";
+
+import { Transform } from "class-transformer";
+import { IsArray, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 
-export class GetProductsQueryDto {
+export class GetVentaQueryDto {
 
-    @ApiProperty({description:'query para filtrado de las ventas por categoria de producto', example:'?category_product=Aseo o ?category_product=Aseo&category_product=Alimento'})
+    
     @IsOptional()
+    @IsString({each:true})
+    @Transform(({ value }) => {
+      if (typeof value === 'string' && value.includes(',')) {
+        
+        return value.split(',').map(item => item.trim()) // Divide por comas y elimina espacios
+      }
+      return value; // Si ya es un array, lo deja intacto
+    })
     category_product?: string | string[]
   
-    @ApiProperty({description:'query para filtrado de las ventas por total de venta', example:'?total_sale=3000'})
+    
     @IsOptional()
+    @IsNumber()
+    @Transform(({ value }) => {
+
+      const queryvalor = Number(value) 
+      return isNaN(queryvalor) ? value: queryvalor
+    })
     total_sale?: string
-  }
+}
