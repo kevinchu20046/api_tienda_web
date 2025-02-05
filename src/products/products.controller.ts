@@ -1,13 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Body, Param, Req, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 import { RequestWhitUser } from 'src/auth/interface/requestuser.interface';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Role } from 'src/auth/decorators/roles.enum';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ApiCreateProductResponses, ApiDeleteProductResponses, ApiFindAllProductResponses, ApiUpdateProductResponses } from './decorators/apiresponsesproducts.decorator';
 
 
 
@@ -17,15 +14,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @ApiResponse({status:201, description: 'Producto creado exitosamente' })
-  @ApiResponse({status:500, description: 'Error en la peticion'})
-  @ApiResponse({status:400, description: 'Envio incorrecto de los datos' })
-  @ApiResponse({status:401, description: 'No se realizado el inicio de sesion' })
-  @ApiResponse({status:409, description: 'El producto ya se encuentra registrado'})
-  @ApiBearerAuth('JWT-auth')
-  @Post('create-product') 
-  @Roles(Role.Admin)
-  @UseGuards(JwtAuthGuard,RolesGuard) 
+
+  @ApiCreateProductResponses()
   createProductController(@Body() createProductDto: CreateProductDto,@Req() request:RequestWhitUser ) {
     try {
       return this.productsService.createProductService(createProductDto,request);
@@ -35,36 +25,27 @@ export class ProductsController {
   }
 
 
-
-  @ApiResponse({status:200, description: 'Lista de los productos' })
-  @ApiResponse({status:500, description: 'Error en la peticion'})
-  @Get()
-  findAllProductController() {
+  @ApiFindAllProductResponses()
+  findAllProductController(@Query('name') name?:string, 
+  @Query('price') price?:string, @Query('category') category?:string, @Query('amount') amount?:string) {
     try {
-      return this.productsService.findAllProductService();
+      const filters = {name_product:name , 
+        price_product:price , 
+        category_product:category, 
+        amount_product:amount}
+
+      const objfil: { [key: string]: string }  = Object.fromEntries(Object.entries(filters).filter(([key , value])=>{
+        return value && String(value).trim() !== '';
+      }))
+
+      return this.productsService.findProductService(objfil);
     } catch (error) {
       throw error
     }
   }
 
-  @ApiResponse({status:200, description: 'Producto traido por nombre' })
-  @ApiResponse({status:500, description: 'Error en la peticion'})
-  @Get(':name')
-  findNameProductController(@Param('name') name:string) {
-    try {
-      return this.productsService.findNameProductService(name);
-    } catch (error) {
-      throw error
-    }
-  }
 
-  @ApiResponse({status:200, description: 'Producto actualizado' })
-  @ApiResponse({status:500, description: 'Error en la peticion'})
-  @ApiResponse({status:400, description: 'No se pudo encontrar el producto para actualizar'})
-  @ApiResponse({status:401, description: 'No tiene permisos sufucientes o no realizado el inicio de sesion'})
-  @ApiBearerAuth('JWT-auth')
-  @Roles(Role.Admin)
-  @Patch(':id')
+  @ApiUpdateProductResponses()
   updateProductController(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     try {
       return this.productsService.updateProductService(id, updateProductDto);
@@ -74,13 +55,8 @@ export class ProductsController {
   }
 
 
-  @ApiResponse({status:200, description: 'Producto eliminado' })
-  @ApiResponse({status:500, description: 'Error en la peticion'})
-  @ApiResponse({status:401, description: 'No tiene permisos sufucientes o no se realizo el inicio de sesion'})
-  @ApiBearerAuth('JWT-auth')
-  @Roles(Role.Admin)
-  @Delete(':id')
-  removeProductController(@Param('id') id: string) {
-    return this.productsService.deleteProductService(id);
+  @ApiDeleteProductResponses()
+  removeProductController(@Param('id') id: string,@Req() request:RequestWhitUser) {
+    return this.productsService.deleteProductService(id,request);
   }
 }
